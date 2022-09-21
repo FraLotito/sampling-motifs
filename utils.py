@@ -381,7 +381,6 @@ def diff_sum(original, null_models):
 
 def avg2(motifs):
     result = {}
-    print(motifs)
     
     for el in motifs:
         for k in el:

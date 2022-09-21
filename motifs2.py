@@ -1,7 +1,6 @@
 from hypergraph import hypergraph
 from utils import *
 from loaders import *
-import pickle
 
 def motifs_order_3(edges, TOT):
     N = 3
@@ -27,7 +26,6 @@ def motifs_order_4(edges, TOT):
     return res
 
 N = 3
-
 edges = load_DBLP(N)
 
 output = {}
@@ -37,36 +35,21 @@ if N == 3:
 elif N == 4:
     output['motifs'] = motifs_order_4(edges, -1)
 
-#print([i[1] for i in output['motifs']])
-
-print(output['motifs'])
-#print([i[1] for i in output['motifs']])
-
-#for c in output['motifs']:
-#    if c[1] > 0:
-#        print(c)
-
-"""
 STEPS = len(edges)*10
+RUN_CONFIG_MODEL = 10
 
 results = []
 
-for i in range(10):
+for i in range(RUN_CONFIG_MODEL):
     e1 = hypergraph(edges)
     e1.MH(label='stub', n_steps=STEPS)
     if N == 3:
         m1 = motifs_order_3(e1.C, i)
     elif N == 4:
         m1 = motifs_order_4(e1.C, i)
-
-    #null_model = e1.shuffle_edges(100)
-    #m1 = count_motifs(null_model, N)
     results.append(m1)
 
 output['config_model'] = results
 
-#with open('results_ho/conference_{}.pickle'.format(N), 'wb') as handle:
-#    pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
 res = norm_vector(diff_sum(output['motifs'], output['config_model']))
 print(res)
-"""

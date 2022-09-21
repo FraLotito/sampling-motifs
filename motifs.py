@@ -1,7 +1,6 @@
 from hypergraph import hypergraph
 from utils import *
 from loaders import *
-import pickle
 
 H_O = True
 L_O = []
@@ -125,46 +124,26 @@ def count_motifs(edges, N, TOT):
     D = {}
     for i in range(len(out)):
         D[i] = out[i][0]
-    
-    #with open('motifs_{}.pickle'.format(N), 'wb') as handle:
-    #    pickle.dump(D, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return out
 
 N = 3
-results = []
 output = {}
-
-
-#S = 1
-#edges = load_PACS_single(N, S)
-
-#edges = load_PACS(N)
-
 edges = load_geology(N)
-m = count_motifs(edges, N, -1)
-output['motifs'] = m
-for c in m:
-    if c[1] > 0:
-        print(c)
-
-exit(0)
+output['motifs'] = count_motifs(edges, N, -1)
 
 STEPS = len(edges)*10
-
-for i in range(-1):
+RUN_CONFIG_MODEL = 10
+results = []
+for i in range(RUN_CONFIG_MODEL):
     if not H_O:
         e1 = hypergraph(edges)
     else:
         e1 = hypergraph(L_O)
     e1.MH(label='stub', n_steps=STEPS)
     m1 = count_motifs(e1.C, N, i)
-
-    #null_model = e1.shuffle_edges(100)
-    #m1 = count_motifs(null_model, N)
     results.append(m1)
-
 output['config_model'] = results
 
-#with open('results_classic/wiki_{}.pickle'.format(N), 'wb') as handle:
-#    pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
+res = norm_vector(diff_sum(output['motifs'], output['config_model']))
+print(res)

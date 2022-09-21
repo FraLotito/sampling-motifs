@@ -1,10 +1,8 @@
-from pip import main
 from hypergraph import hypergraph
 from utils import *
 from loaders import *
 import pickle
-import random, time
-from queue import Queue
+import random
 from metrics import *
 
 def load(name):
@@ -35,10 +33,9 @@ def count_max_card(motif):
             res+=1
     return res
 
-def rand_motifs_3(edges, NS):
+def rand_motifs_3(edges, NS, a=3):
     N = 3
     mapping, labeling = generate_motifs(N)
-    E = len(edges)
     NS = int(NS)
 
     T = {}
@@ -86,8 +83,9 @@ def rand_motifs_3(edges, NS):
     edges = split(edges)
 
     ns = {}
-    ns[2] = int(0.25 * NS)
-    ns[3] = int(0.75 * NS)
+    k = 1 / (a+1)
+    ns[2] = int(k * NS)
+    ns[3] = int(k * a * NS)
  
     sampled_edges = random.choices(edges[2], k=ns[2])
 
@@ -129,9 +127,8 @@ def rand_motifs_3(edges, NS):
     
     return out
 
-def rand_motifs_4(edges, NS, verbose=False):
+def rand_motifs_4(edges, NS, a=3, b=2, verbose=False):
     N = 4
-    E = len(edges)
     mapping, labeling = generate_motifs(N)
 
     T = {}
@@ -180,9 +177,10 @@ def rand_motifs_4(edges, NS, verbose=False):
     edges = split(edges)
 
     ns = {}
-    ns[2] = int(0.2 * NS)
-    ns[3] = int(0.4 * NS)
-    ns[4] = int(0.4 * NS)
+    k = 1 / (a+b+1)
+    ns[2] = int(k * NS)
+    ns[3] = int(k * a * NS)
+    ns[4] = int(k * b * NS)
     sampled_edges = random.choices(edges[2], k=ns[2])
 
     i = 0
@@ -260,9 +258,8 @@ def rand_motifs_4(edges, NS, verbose=False):
     
     return out
 
-def rand_motifs_5(edges, NS, verbose=False):
+def rand_motifs_5(edges, NS, a=3, b=2, c=2, verbose=False):
     N = 5
-    E = len(edges)
     labeling = {}
 
     def generate_all_relabelings(n, nodes):
@@ -323,10 +320,11 @@ def rand_motifs_5(edges, NS, verbose=False):
     edges = split(edges)
 
     ns = {}
-    ns[2] = int(0.1 * NS)
-    ns[3] = int(0.2 * NS)
-    ns[4] = int(0.3 * NS)
-    ns[5] = int(0.4 * NS)
+    k = 1 / (a+b+c+1)
+    ns[2] = int(k * NS)
+    ns[3] = int(k * a * NS)
+    ns[4] = int(k * b * NS)
+    ns[5] = int(k * c * NS)
     sampled_edges = random.choices(edges[2], k=ns[2])
 
     i = 0
@@ -455,65 +453,39 @@ def rand_motifs_5(edges, NS, verbose=False):
     
     return out
 
+
 if __name__ == "__main__":
     N = 4
-    edges = load_DBLP(N)
-    dataset = "dblp_4"
+    S = 100
+    edges = load_high_school(N)
+    print("Loaded {} edges".format(len(edges)))
 
-    exact = load('results_ho/{}.pickle'.format(dataset))['motifs']
-    f = open("{}_sampling_data.txt".format(dataset), 'w+')
+    if N == 3:
+        output = rand_motifs_3(edges, S)
+    elif N == 4:
+        output = rand_motifs_4(edges, S)
+    elif N == 5:
+        output = rand_motifs_5(edges, S)
+    else:
+        print("Not implemented")
+        exit(0)
 
-    R = 0.01
-
-    for p in [1000, 2500, 5000, 10000, 20000]:
-        for i in range(1, 5):
-            print(p, i)
-            start = time.time()
-            output = {}
-
-            if N == 3:
-                output['motifs'] = rand_motifs_3(edges, p)
-            elif N == 4:
-                output['motifs'] = rand_motifs_4(edges, p)
-            elif N == 5:
-                output['motifs'] = rand_motifs_5(edges, len(edges) * p, N)
-
-            #print([i[1] for i in output['motifs']])
-            est = output['motifs']
-            end = time.time()
-            print("p: {}, TIME: {}\n".format(p, end - start))
-            print(max_relative_error(exact, est), mean_relative_error(exact, est), kendall(exact, est))
-            
-            f.write("p: {}, time: {}, corr: {}\n".format(p, end - start, kendall(exact, est)))
-    f.close()
-    exit(0)
-    #print([i[1] for i in output['motifs']])
-
-    #for c in output['motifs']:
-    #    if c[1] > 0:
-    #        print(c)
-
-    """
-    STEPS = len(edges)*10
+    print("OBSERVED DONE")
 
     results = []
-
-    for i in range(10):
+    STEPS = len(edges)*10
+    RUN_CONFIG_MODEL = 10
+    for i in range(RUN_CONFIG_MODEL):
+        print("Configuration model run: ", i+1)
         e1 = hypergraph(edges)
         e1.MH(label='stub', n_steps=STEPS)
         if N == 3:
-            m1 = rand_motifs_3(e1.C, len(e1.C) * p)
+            m1 = rand_motifs_3(e1.C, S)
         elif N == 4:
-            m1 = rand_motifs_4(e1.C, len(e1.C) * p)
-
-        #null_model = e1.shuffle_edges(100)
-        #m1 = count_motifs(null_model, N)
+            m1 = rand_motifs_4(e1.C, S)
+        elif N == 5:
+            m1 = rand_motifs_5(e1.C, S)
         results.append(m1)
 
-    output['config_model'] = results
-
-    #with open('results_ho/conference_{}.pickle'.format(N), 'wb') as handle:
-    #    pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    res = norm_vector(diff_sum(output['motifs'], output['config_model']))
+    res = norm_vector(diff_sum(output, results))
     print(res)
-    """
