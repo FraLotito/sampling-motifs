@@ -1,6 +1,6 @@
-# Exact and sampling methods for mining higher-order motifs in large hypergraphs
+# Exact and Sampling Methods for Mining Higher-Order Motifs in Large Hypergraphs
 
-This code implements the different algorithms for higher-order motif analysis proposed in the paper submitted at ECMLPKDD2022.
+This code implements the different algorithms for higher-order motif analysis proposed in the paper ```Exact and Sampling Methods for Mining Higher-Order Motifs in Large Hypergraphs```.
 
 ## Abstract
 
